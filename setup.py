@@ -3,14 +3,13 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='project',
+    name='CS:GO Grenade Classification',
     version='0.0.0',
     description='Describe Your Cool Project',
-    author='',
-    author_email='',
-    # REPLACE WITH YOUR OWN GITHUB PROJECT LINK
+    author='Krzysztof Kwaśniak',
+    author_email='krzysztofkwasniak98@gmail.com',
     url='https://github.com/PyTorchLightning/pytorch-lightning-conference-seed',
-    install_requires=['pytorch-lightning'],
+    install_requires=['pytorch-lightning', 'pytorch-lightning-bolts'],
     packages=find_packages(),
 )
 

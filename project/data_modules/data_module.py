@@ -1,27 +1,33 @@
+import numpy as np
 import pandas as pd
 import pytorch_lightning as pl
 from sklearn.model_selection import train_test_split
+import sys
 from torch.utils.data import DataLoader
-from dataset import GrenadeDataset
+from .dataset import GrenadeDataset
+sys.path.insert(1, "C:/CS-GO-Grenade-Classification/project/utils")
+from clean_data import preprocess
 
+
+COLUMNS_TO_DROP = ["demo_id", "demo_round_id", "weapon_fire_id", "round_start_tick"]
+DUMMY_COLS = ["LABEL", "team", "TYPE", "map_name"]
 pl.seed_everything(42)
 
 class GrenadeDataModule(pl.LightningDataModule):
 
-    def __init__(self, hparams):
-
+    def __init__(self):
         super().__init__()
-        self.csv_file = hparams["csv_file"]
-        self.batch_size = hparams["batch_size"]
-        self.test_size = hparams["test_size"]
+        self.mirage_csv_file = "C:/CS-GO-Grenade-Classification/project/data/train-grenades-de_mirage.csv"
+        self.inferno_csv_file = "C:/CS-GO-Grenade-Classification/project/data/train-grenades-de_inferno.csv"
+        self.batch_size = 16
+        self.test_size = 0.25
 
     def setup(self, stage = None):
-        raw_data = pd.read_csv(self.csv_file, index_col = 0)
-        data_dropped =  raw_data.drop(columns = ["demo_id", "demo_round_id", "weapon_fire_id", "map_name", "round_start_tick"])
-        data_dummies = pd.get_dummies(data_dropped, columns = ["team", "LABEL", "TYPE"], drop_first = True)
-        X = data_dummies.drop(columns = ["LABEL_True"])
-        y = data_dummies["LABEL_True"]
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = self.test_size, random_state = 42)
+        inferno = pd.read_csv(self.mirage_csv_file, index_col = 0)
+        mirage = pd.read_csv(self.inferno_csv_file, index_col = 0)
+        raw_data = pd.concat([inferno, mirage])
+        X, y = preprocess(raw_data)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, stratify = y, test_size = self.test_size, random_state = 42)
 
         self.train_dataset = GrenadeDataset(X_train, y_train)
         self.val_dataset = GrenadeDataset(X_test, y_test)
@@ -31,4 +37,7 @@ class GrenadeDataModule(pl.LightningDataModule):
     
     def val_dataloader(self):
         return DataLoader(self.val_dataset, batch_size = self.batch_size)
+
+
+
 
