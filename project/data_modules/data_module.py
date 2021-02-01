@@ -6,7 +6,7 @@ import sys
 from torch.utils.data import DataLoader
 from .dataset import GrenadeDataset
 sys.path.insert(1, "C:/CS-GO-Grenade-Classification/project/utils")
-from clean_data import preprocess
+from data_utils import preprocess
 
 
 COLUMNS_TO_DROP = ["demo_id", "demo_round_id", "weapon_fire_id", "round_start_tick"]

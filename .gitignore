@@ -130,3 +130,8 @@ MNIST
 
 # data
 .csv
+
+#text files
+.txt
+
+

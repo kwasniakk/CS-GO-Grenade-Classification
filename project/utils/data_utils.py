@@ -10,4 +10,3 @@ def preprocess(df):
     X = data_cleaned.drop(columns = ["LABEL_True"])
     y = data_cleaned["LABEL_True"]
     return X, y
-
