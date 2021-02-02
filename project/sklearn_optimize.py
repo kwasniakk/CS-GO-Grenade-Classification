@@ -37,7 +37,7 @@ class Objective():
         clf_name = trial.suggest_categorical("clf_name", self.classifiers)
         if clf_name == "LGBM":
             params["boosting_type"] = trial.suggest_categorical("boosting_type", ["gbdt", "dart", "goss"])
-            params["num_leaves"] = trial.suggest_int("num_leaves", 10, 100)
+            params["num_leaves"] = trial.suggest_int("num_leaves", 10, 1000)
             params["max_depth"] = trial.suggest_int("max_depth", 2, 50)
             params["learning_rate"] = trial.suggest_float("learning_rate", 1e-6, 1, log = True)
             params["n_estimators"] = trial.suggest_int("n_estimators", 50, 500)
