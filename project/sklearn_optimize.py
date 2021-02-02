@@ -6,6 +6,7 @@ import pandas as pd
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import balanced_accuracy_score
 from sklearn.model_selection import cross_val_score, StratifiedKFold, train_test_split
 from imblearn.over_sampling import SMOTE
 from utils.data_utils import preprocess
@@ -47,7 +48,7 @@ class Objective():
             params["n_estimators"] = trial.suggest_int("n_estimators", 50, 500)
             params["reg_alpha"] = trial.suggest_float("reg_alpha", 1e-10, 1e2)
             params["reg_lambda"] = trial.suggest_float("reg_lambda", 1e-10, 1e2)
-            clf = XGBClassifier(n_jobs = -1, **params)
+            clf = XGBClassifier(use_label_encoder = False, verbosity = 0, n_jobs = -1, **params)
         elif clf_name == "GaussianNB":
             params["var_smoothing"] = trial.suggest_float("var_smoothing", 1e-10, 1e-2)
             clf = GaussianNB(**params)
@@ -64,14 +65,28 @@ class Objective():
             params["min_samples_split"] = trial.suggest_int("min_samples_split", 2, 50)
             clf = ExtraTreesClassifier(n_jobs = -1, class_weight = self.class_weight, **params)
 
-        scores = cross_val_score(clf, X, y, scoring = "balanced_accuracy")
-        return scores.mean()
+        kf = StratifiedKFold(n_splits = 5)
+        scores = []
+        for train_index, test_index in kf.split(X, y):
+            X_train = X[train_index]
+            y_train = np.ravel(y[train_index])
+            X_test = X[test_index]
+            y_test = np.ravel(y[test_index])
+            sm = SMOTE()
+            X_train_oversampled, y_train_oversampled = sm.fit_resample(X_train, y_train)
+            clf = clf
+            clf.fit(X_train_oversampled, y_train_oversampled)
+            y_pred = clf.predict(X_test)
+            balanced_acc = balanced_accuracy_score(y_test, y_pred)
+            scores.append(balanced_acc)
+
+        #scores = cross_val_score(clf, X, y, scoring = "balanced_accuracy")
+        return np.mean(scores)
 
 if __name__ == "__main__":
 
     X, y = load_data()
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, stratify = y)
-    objective = Objective(X_train, y_train)
+    objective = Objective(X, y)
     
     study = optuna.create_study(direction = "maximize")
     study.optimize(objective, n_trials = 200)
